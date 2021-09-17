@@ -1,157 +1,98 @@
-
-
 #include <Arduino.h>
 #include "BTS7960.h"
 #include <PID_v1.h>
 #include "ads.h"
+#include <NintendoExtensionCtrl.h>
 
 //################# PIN DEFINITIONS ########################
-const uint8_t M_EN = 0;
-const uint8_t M_L_PWM = 0;
-const uint8_t M_R_PWM = 0;
+const uint8_t M_EN = 37;
+const uint8_t M_L_PWM = 35;
+const uint8_t M_R_PWM = 36;
 
-#define ADS_RESET_PIN (3)     // Pin number attached to ads reset line.
-#define ADS_INTERRUPT_PIN (4) // Pin number attached to the ads data ready line.
+const int POS_Sen = A19;
 
 BTS7960 MotorController(M_EN, M_L_PWM, M_R_PWM);
+Nunchuk nchuk;
 
-//########### FUNCTION DECLARATIONS ############
-void ads_data_callback(float *sample);
-void deadzone_filter(float *sample);
-void signal_filter(float *sample);
-void parse_com_port(void);
+//############## PID Values ###############################
+int KP = 4; //4
+int KI = 1; //1
+int KD = 0; //0
 
-/* Receives new samples from the ADS library */
-void ads_data_callback(float *sample, uint8_t sample_type)
-{
-  if (sample_type == ADS_SAMPLE)
-  {
-    // Low pass IIR filter
-    signal_filter(sample);
+//PID Variables
+double Setpoint, Input, Output;
 
-    // Deadzone filter
-    deadzone_filter(sample);
+//Specify the links and initial tuning parameters
+PID PID1(&Input, &Output, &Setpoint, KP, KI, KD, P_ON_E, DIRECT);
+//P_ON_M specifies that Proportional on Measurement be used
+//P_ON_E (Proportional on Error) is the default behavior
 
-    Serial.println(sample[0]);
-  }
-}
+boolean zButton = false;
+int Throttle = 0;
+int Steering = 0;
 
 void setup()
 {
-  // put your setup code here, to run once:
-  ads_init_t init;
-
-  init.sps = ADS_100_HZ;                         // Set sample rate to 100 Hzlear
-  init.ads_sample_callback = &ads_data_callback; // Provide callback for new data
-  init.reset_pin = ADS_RESET_PIN;                // Pin connected to ADS reset line
-  init.datardy_pin = ADS_INTERRUPT_PIN;          // Pin connected to ADS data ready interrupt
-  init.addr = 0;                                 // Update value if non default I2C address is assinged to sensor
-
-  // Initialize ADS hardware abstraction layer, and set the sample rate
-  int ret_val = ads_init(&init);
-
-  if (ret_val != ADS_OK)
+  Serial.begin(9600); //PC Debug
+  delay(2000);
+  //turn the PID on and set parameters
+  nchuk.begin();
+  delay(500);
+  Serial.println("WII");
+  while (!nchuk.connect())
   {
-    Serial.print("One Axis ADS initialization failed with reason: ");
-    Serial.println(ret_val);
-  }
-  else
-  {
-    Serial.println("One Axis ADS initialization succeeded...");
+    Serial.println("Nunchuk not detected!");
+    delay(1000);
   }
 
-  // Start reading data in interrupt mode
-  ads_run(true);
+  PID1.SetMode(AUTOMATIC);
+  PID1.SetOutputLimits(-100, 100);
+  PID1.SetSampleTime(10);
+  Setpoint = 100;
+  Serial.println("ready...");
 }
-
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
-}
 
-/* Function parses received characters from the COM port for commands */
-void parse_com_port(void)
-{
-  char key = Serial.read();
+  boolean success = nchuk.update(); // Get new data from the controller
 
-  switch (key)
-  {
-  case '0':
-    // Take first calibration point at zero degrees
-    ads_calibrate(ADS_CALIBRATE_FIRST, 0);
-    break;
-  case '9':
-    // Take second calibration point at 180 degrees
-    ads_calibrate(ADS_CALIBRATE_SECOND, 180);
-    break;
-  case 'c':
-    // Restore factory calibration coefficients
-    ads_calibrate(ADS_CALIBRATE_CLEAR, 0);
-    break;
-  case 'r':
-    // Start sampling in interrupt mode
-    ads_run(true);
-    break;
-  case 's':
-    // Place ADS in suspend mode
-    ads_run(false);
-    break;
-  case 'f':
-    // Set ADS sample rate to 200 Hz (interrupt mode)
-    ads_set_sample_rate(ADS_200_HZ);
-    break;
-  case 'u':
-    // Set ADS sample to rate to 10 Hz (interrupt mode)
-    ads_set_sample_rate(ADS_10_HZ);
-    break;
-  case 'n':
-    // Set ADS sample rate to 100 Hz (interrupt mode)
-    ads_set_sample_rate(ADS_100_HZ);
-    break;
-  default:
-    break;
+  if (!success)
+  { // Lost conection with controller
+    Serial1.println("Nunchuk  disconnected!");
+    Serial1.println("Please reset motor Controller!");
+    delay(1000);
   }
-}
-
-/* 
- *  Second order Infinite impulse response low pass filter. Sample freqency 100 Hz.
- *  Cutoff freqency 20 Hz. 
- */
-void signal_filter(float *sample)
-{
-  static float filter_samples[2][6];
-
-  for (uint8_t i = 0; i < 2; i++)
+  else
   {
-    filter_samples[i][5] = filter_samples[i][4];
-    filter_samples[i][4] = filter_samples[i][3];
-    filter_samples[i][3] = (float)sample[i];
-    filter_samples[i][2] = filter_samples[i][1];
-    filter_samples[i][1] = filter_samples[i][0];
+    zButton = nchuk.buttonZ();
+    Steering = nchuk.accelY();
+    Throttle = nchuk.joyY();
 
-    // 20 Hz cutoff frequency @ 100 Hz Sample Rate
-    filter_samples[i][0] = filter_samples[i][1] * (0.36952737735124147f) - 0.19581571265583314f * filter_samples[i][2] +
-                           0.20657208382614792f * (filter_samples[i][3] + 2 * filter_samples[i][4] + filter_samples[i][5]);
-
-    sample[i] = filter_samples[i][0];
+    // Serial.print(Throttle);
+    // Serial.print(" ");
+    // Serial.print(Steering);
+    // Serial.print(" ");
+    // Serial.println(zButton);
   }
-}
 
-/* 
- *  If the current sample is less that 0.5 degrees different from the previous sample
- *  the function returns the previous sample. Removes jitter from the signal. 
- */
-void deadzone_filter(float *sample)
-{
-  static float prev_sample[2];
-  float dead_zone = 0.75f;
-
-  for (uint8_t i = 0; i < 2; i++)
+  if (Throttle > 130)
   {
-    if (fabs(sample[i] - prev_sample[i]) > dead_zone)
-      prev_sample[i] = sample[i];
-    else
-      sample[i] = prev_sample[i];
+    MotorController.Enable();
+    MotorController.TurnRight(127);
   }
+  else if (Throttle < 125)
+  {
+    MotorController.Enable();
+    MotorController.TurnLeft(127);
+  }
+  else
+  {
+    MotorController.Stop();
+    MotorController.Disable();
+  }
+
+  int POSsen = analogRead(POS_Sen);
+  Serial.println(POSsen);
+  delay(20);
 }
