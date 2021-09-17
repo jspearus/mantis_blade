@@ -46,7 +46,24 @@ void setup()
   init.reset_pin = ADS_RESET_PIN;                // Pin connected to ADS reset line
   init.datardy_pin = ADS_INTERRUPT_PIN;          // Pin connected to ADS data ready interrupt
   init.addr = 0;                                 // Update value if non default I2C address is assinged to sensor
+
+  // Initialize ADS hardware abstraction layer, and set the sample rate
+  int ret_val = ads_init(&init);
+
+  if (ret_val != ADS_OK)
+  {
+    Serial.print("One Axis ADS initialization failed with reason: ");
+    Serial.println(ret_val);
+  }
+  else
+  {
+    Serial.println("One Axis ADS initialization succeeded...");
+  }
+
+  // Start reading data in interrupt mode
+  ads_run(true);
 }
+
 
 void loop()
 {
