@@ -22,6 +22,8 @@ int KP = 4; //4
 int KI = 1; //1
 int KD = 0; //0
 
+int I_S_Offset = 4; //5
+
 //PID Variables
 double Setpoint, Input, Output;
 
@@ -72,22 +74,25 @@ void loop()
     Steering = nchuk.accelY();
     Throttle = nchuk.joyY();
 
-    Serial.print(Throttle);
-    Serial.print(" ");
-    // Serial.print(Steering);
+    // Serial.print(Throttle);
+    // Serial.print(" ");
+    // // Serial.print(Steering);
     // Serial.print(" ");
     // Serial.println(zButton);
   }
 
   int POSsen = analogRead(POS_Sen);
-  POSsen = map(POSsen, 1, 1020, 0, 255);
-  Serial.print(POSsen);
+  POSsen = map(POSsen, 225, 1023, 0, 500);
   Input = POSsen;
-  Throttle = map(Throttle, 0, 255, 0, 255);
+  Throttle = map(Throttle, 0, 255, 0, 500);
   Setpoint = Throttle;
+  Serial.print(Input);
+  Serial.print(" ");
+  Serial.print(Setpoint);
 
   delay(20);
-  if (Input >= Setpoint - 6 && Input <= Setpoint + 6)
+  if (Input >= Setpoint - I_S_Offset &&
+      Input <= Setpoint + I_S_Offset)
   {
     Output = 0.0;
   }
