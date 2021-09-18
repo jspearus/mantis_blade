@@ -32,7 +32,8 @@ void ads_data_callback(float *sample, uint8_t sample_type)
         // Deadzone filter
         deadzone_filter(sample);
 
-        Serial.println(sample[0]);
+        Serial.println(sample[0]); // Data output####################
+        //###########################################
     }
 }
 

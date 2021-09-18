@@ -14,6 +14,9 @@ const int POS_Sen = A19;
 BTS7960 MotorController(M_EN, M_L_PWM, M_R_PWM);
 Nunchuk nchuk;
 
+//################### FUNCTIONDECLAREATIONS ###############
+void moveMotor(int val);
+
 //############## PID Values ###############################
 int KP = 4; //4
 int KI = 1; //1
@@ -46,7 +49,7 @@ void setup()
   }
 
   PID1.SetMode(AUTOMATIC);
-  PID1.SetOutputLimits(-100, 100);
+  PID1.SetOutputLimits(-255, 255);
   PID1.SetSampleTime(10);
   Setpoint = 100;
   Serial.println("ready...");
@@ -69,30 +72,51 @@ void loop()
     Steering = nchuk.accelY();
     Throttle = nchuk.joyY();
 
-    // Serial.print(Throttle);
-    // Serial.print(" ");
+    Serial.print(Throttle);
+    Serial.print(" ");
     // Serial.print(Steering);
     // Serial.print(" ");
     // Serial.println(zButton);
   }
 
-  if (Throttle > 130)
+  int POSsen = analogRead(POS_Sen);
+  POSsen = map(POSsen, 1, 1020, 0, 255);
+  Serial.print(POSsen);
+  Input = POSsen;
+  Throttle = map(Throttle, 0, 255, 0, 255);
+  Setpoint = Throttle;
+
+  delay(20);
+  if (Input >= Setpoint - 6 && Input <= Setpoint + 6)
   {
-    MotorController.Enable();
-    MotorController.TurnRight(127);
+    Output = 0.0;
   }
-  else if (Throttle < 125)
+  else
+  {
+    PID1.Compute();
+  }
+  moveMotor(Output);
+}
+
+void moveMotor(int val)
+{
+  if (val > 3)
   {
     MotorController.Enable();
-    MotorController.TurnLeft(127);
+    MotorController.TurnLeft(val);
+    Serial.println(" Out");
+  }
+  else if (val < -3)
+  {
+    val = val * -1;
+    MotorController.Enable();
+    MotorController.TurnRight(val);
+    Serial.println(" IN");
   }
   else
   {
     MotorController.Stop();
     MotorController.Disable();
+    Serial.println(" Stop");
   }
-
-  int POSsen = analogRead(POS_Sen);
-  Serial.println(POSsen);
-  delay(20);
 }
