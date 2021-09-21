@@ -1,8 +1,7 @@
-
-
 #include <Arduino.h>
 #include "BTS7960.h"
 #include <PID_v1.h>
+#include "ads.h"
 #include <NintendoExtensionCtrl.h>
 
 //################# PIN DEFINITIONS ########################
@@ -77,7 +76,7 @@ void loop()
 
     // Serial.print(Throttle);
     // Serial.print(" ");
-    // Serial.print(Steering);
+    // // Serial.print(Steering);
     // Serial.print(" ");
     // Serial.println(zButton);
   }
