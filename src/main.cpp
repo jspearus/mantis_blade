@@ -14,7 +14,7 @@ const uint8_t M_R_PWM = 3;
 const int POS_Sen = A13;
 
 // Connect to the RST pin on the Sound Board
-#define SFX_RST 4
+#define SFX_RST 41
 
 //################### FUNCTIONDECLAREATIONS ###############
 void moveMotor(int val);
@@ -38,7 +38,7 @@ PID PID1(&Input, &Output, &Setpoint, KP, KI, KD, P_ON_E, DIRECT);
 //P_ON_M specifies that Proportional on Measurement be used
 //P_ON_E (Proportional on Error) is the default behavior
 
-//Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial3, NULL, SFX_RST);
+Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial3, NULL, SFX_RST);
 
 BTS7960 MotorController(M_EN, M_L_PWM, M_R_PWM);
 Nunchuk nchuk;
@@ -64,11 +64,12 @@ void setup()
   //   Serial5.println("Nunchuk not detected!");
   //   delay(1000);
   // }
-  // if (!sfx.reset())
-  // {
-  //   Serial5.println("Soundboard not found");
-  //   while (1);
-  // }
+  if (!sfx.reset())
+  {
+    Serial5.println("Soundboard not found");
+    while (1)
+      ;
+  }
   Serial5.println("SFX board found...");
 
   delay(1000);
@@ -77,6 +78,7 @@ void setup()
   PID1.SetSampleTime(10);
   Setpoint = 100;
   Serial5.println("PID ready..");
+  sfx.println("#02");
 }
 
 void loop()
