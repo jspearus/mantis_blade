@@ -5,6 +5,7 @@
 #include <PID_v1.h>
 #include <NintendoExtensionCtrl.h>
 #include "Adafruit_Soundboard.h"
+#include <EEPROM.h>
 
 //################# PIN DEFINITIONS ########################
 const uint8_t M_EN = 4;
@@ -43,9 +44,10 @@ Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial3, NULL, SFX_RST);
 BTS7960 MotorController(M_EN, M_L_PWM, M_R_PWM);
 Nunchuk nchuk;
 
+boolean WiiMote = false;
+
 boolean zButton = false;
-int Throttle = 0;
-int Steering = 0;
+int setpoint = 0;
 
 void setup()
 {
@@ -55,15 +57,23 @@ void setup()
   Serial4.setTimeout(100);
   Serial5.begin(9600); // XBee port
   delay(1000);
-  //turn the PID on and set parameters
-  // nchuk.begin();
-  // delay(1000);
-  // Serial5.println("Nunchuk Connected...");
-  // while (!nchuk.connect())
-  // {
-  //   Serial5.println("Nunchuk not detected!");
-  //   delay(1000);
-  // }
+
+  if (WiiMote == true)
+  {
+    nchuk.begin();
+    delay(1000);
+    if (!nchuk.connect())
+    {
+      Serial5.println("Nunchuk not detected!");
+      WiiMote = false;
+      delay(1000);
+    }
+    else
+    {
+      Serial5.println("Nunchuk Connected...");
+      sfx.println("#10");
+    }
+  }
   if (!sfx.reset())
   {
     Serial5.println("Soundboard not found");
@@ -73,6 +83,7 @@ void setup()
   Serial5.println("SFX board found...");
 
   delay(1000);
+  //turn the PID on and set parameters
   PID1.SetMode(AUTOMATIC);
   PID1.SetOutputLimits(-255, 255);
   PID1.SetSampleTime(10);
@@ -83,37 +94,40 @@ void setup()
 
 void loop()
 {
+  if (WiiMote == true)
+  {
+    boolean success = nchuk.update(); // Get new data from the controller
 
-  // boolean success = nchuk.update(); // Get new data from the controller
+    if (!success)
+    { // Lost conection with controller
+      Serial5.println("Nunchuk  disconnected!");
+      Serial5.println("Please reset motor Controller!");
+      delay(1000);
+    }
+    else
+    {
+      zButton = nchuk.buttonZ();
+      setpoint = nchuk.joyY();
 
-  // if (!success)
-  // { // Lost conection with controller
-  //   Serial5.println("Nunchuk  disconnected!");
-  //   Serial5.println("Please reset motor Controller!");
-  //   delay(1000);
-  // }
-  // else
-  // {
-  //   zButton = nchuk.buttonZ();
-  //   Steering = nchuk.accelY();
-  //   //Throttle = nchuk.joyY();
-
-  //   // Serial.print(Throttle);
-  //   // Serial.print(" ");
-  //   // Serial.print(Steering);
-  //   // Serial.print(" ");
-  //   // Serial.println(zButton);
-  // }
-
-  Serial4.print("gfd#");
+      // Serial.print(setpoint);
+      // Serial.print(" ");
+      // Serial.print(Steering);
+      // Serial.print(" ");
+      // Serial.println(zButton);
+    }
+  }
+  if (WiiMote == false)
+  {
+    Serial4.print("gfd#");
+  }
   int POSsen = analogRead(POS_Sen);
   Serial5.println(POSsen);
   POSsen = map(POSsen, 220, 1023, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
-  Throttle = map(Throttle, 0, 300, 0, 500);
-  Throttle = constrain(Throttle, 0, 500);
-  Setpoint = Throttle;
+  setpoint = map(setpoint, 0, 300, 0, 500);
+  setpoint = constrain(setpoint, 0, 500);
+  Setpoint = setpoint;
 
   Serial.print(Input);
   Serial.print(" ");
@@ -136,7 +150,7 @@ void serialEvent4()
 { //from Sensor Glove
   // add it to the inputString:
   Data_In = Serial4.readStringUntil('#');
-  Throttle = Data_In.toInt();
+  setpoint = Data_In.toInt();
   Data_In = "";
 }
 
