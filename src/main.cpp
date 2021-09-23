@@ -44,7 +44,7 @@ Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial3, NULL, SFX_RST);
 BTS7960 MotorController(M_EN, M_L_PWM, M_R_PWM);
 Nunchuk nchuk;
 
-boolean WiiMote = false;
+boolean WiiMote = true;
 
 boolean zButton = false;
 int setpoint = 0;
@@ -57,6 +57,13 @@ void setup()
   Serial4.setTimeout(100);
   Serial5.begin(9600); // XBee port
   delay(1000);
+  if (!sfx.reset())
+  {
+    Serial5.println("  Soundboard not found...");
+    while (1)
+      ;
+  }
+  Serial5.println(" SFX board found...");
 
   if (WiiMote == true)
   {
@@ -64,31 +71,24 @@ void setup()
     delay(1000);
     if (!nchuk.connect())
     {
-      Serial5.println("Nunchuk not detected!");
+      Serial5.println(" Sensor glove mode...");
       WiiMote = false;
       delay(1000);
     }
     else
     {
-      Serial5.println("Nunchuk Connected...");
+      Serial5.println(" Nunchuk Connected...");
       sfx.println("#10");
     }
   }
-  if (!sfx.reset())
-  {
-    Serial5.println("Soundboard not found");
-    while (1)
-      ;
-  }
-  Serial5.println("SFX board found...");
 
-  delay(1000);
+  delay(2500);
   //turn the PID on and set parameters
   PID1.SetMode(AUTOMATIC);
   PID1.SetOutputLimits(-255, 255);
   PID1.SetSampleTime(10);
   Setpoint = 100;
-  Serial5.println("PID ready..");
+  Serial5.println(" PID ready..");
   sfx.println("#02");
 }
 
@@ -100,8 +100,8 @@ void loop()
 
     if (!success)
     { // Lost conection with controller
-      Serial5.println("Nunchuk  disconnected!");
-      Serial5.println("Please reset motor Controller!");
+      Serial5.println(" Nunchuk  disconnected!");
+      Serial5.println(" Please reset motor Controller!");
       delay(1000);
     }
     else
