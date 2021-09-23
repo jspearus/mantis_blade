@@ -107,7 +107,7 @@ void loop()
 
   Serial4.print("gfd#");
   int POSsen = analogRead(POS_Sen);
-  Serial5.println(POSsen);
+  Serial.println(POSsen);
   POSsen = map(POSsen, 220, 1023, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
