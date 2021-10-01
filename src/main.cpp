@@ -56,7 +56,9 @@ void setup()
   Serial4.begin(115200); ///Sensor Glove Port
   Serial4.setTimeout(100);
   Serial5.begin(9600); // XBee port
-  delay(1000);
+  delay(3000);
+  Serial.println("mantis_blade Initializing...");
+  Serial5.println("mantis_blade Initializing...");
   if (!sfx.reset())
   {
     Serial5.println("  Soundboard not found...");
@@ -121,7 +123,7 @@ void loop()
     Serial4.print("gfd#");
   }
   int POSsen = analogRead(POS_Sen);
-  Serial.println(POSsen);
+  // Serial.println(POSsen);
   POSsen = map(POSsen, 220, 1023, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
@@ -129,9 +131,9 @@ void loop()
   setpoint = constrain(setpoint, 0, 500);
   Setpoint = setpoint;
 
-  Serial.print(Input);
-  Serial.print(" ");
-  Serial.println(Setpoint);
+  // Serial.print(Input);
+  // Serial.print(" ");
+  // Serial.println(Setpoint);
 
   delay(20);
   if (Input >= Setpoint - I_S_Offset &&
