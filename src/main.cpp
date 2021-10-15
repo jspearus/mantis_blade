@@ -13,12 +13,16 @@ const uint8_t M_L_PWM = 2;
 const uint8_t M_R_PWM = 3;
 
 const int POS_Sen = A13;
+const int TEM_Sen = A15;
+const int BAT_Sen = A12;
 
 // Connect to the RST pin on the Sound Board
 #define SFX_RST 41
 
 //################### FUNCTIONDECLAREATIONS ###############
 void moveMotor(int val);
+void serialEvent();
+void serial4Event();
 
 //############## PID Values ###############################
 int KP = 4; //4
@@ -32,22 +36,32 @@ int setpoint = 0;
 //############################ VARIABLES ########################################
 String Data_In = "";
 int POSsen = 0;
+int intTemp = 0;
+float batV = 0;
+bool ctrlbat_low = false;
+float dbats[4];
+unsigned long sysClock;
+int updateTime = 500;
+int hudView = 0;
 
 int mode = 0;
 bool mode_set = false;
 
 boolean WiiMote = true;
-boolean zButton = false;
 
 bool isOPen = false;
 
-//PID Variables
+//PID Variablesd
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
 PID PID1(&Input, &Output, &Setpoint, KP, KI, KD, P_ON_E, DIRECT);
 //P_ON_M specifies that Proportional on Measurement be used
 //P_ON_E (Proportional on Error) is the default behavior
+
+//####################FUNCTION DECLARATIONS #############################
+void internalTemperature();
+void getDriveBatData();
 
 Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial3, NULL, SFX_RST);
 
@@ -61,6 +75,9 @@ void setup()
   Serial4.begin(115200); ///Sensor Glove Port
   Serial4.setTimeout(50);
   Serial5.begin(9600); // XBee port
+  Serial5.setTimeout(50);
+  Serial6.begin(115200); ///Drive Battery Monitor Port
+  Serial6.setTimeout(50);
   delay(3000);
   Serial.println("mantis_blade Initializing...");
   Serial5.println("mantis_blade Initializing...");
@@ -71,6 +88,7 @@ void setup()
       ;
   }
   Serial5.println(" SFX board found...");
+  sfx.println("#01");
 
   if (WiiMote == true)
   {
@@ -87,6 +105,7 @@ void setup()
       Serial5.println(" Nunchuk Connected...");
       sfx.println("#10");
     }
+    intTemp = analogRead(TEM_Sen);
   }
 
   delay(2500);
@@ -98,11 +117,35 @@ void setup()
   Serial5.println(" PID ready..");
   Serial5.print(" Mode = ");
   Serial5.println(mode);
-  sfx.println("#02");
+  sfx.println("#09");
+  Serial5.print("Internal Temp = ");
+  internalTemperature();
+  Serial5.println(intTemp);
+  Serial5.print("CRTL Bat = ");
+  getDriveBatData();
+  Serial5.println(batV);
+
+  // initialize system clock
+  sysClock = millis();
 }
 
 void loop()
 {
+  // update system clock
+  if (sysClock + updateTime < millis())
+  {
+    internalTemperature();
+    getDriveBatData();
+    // update hudview
+    if (hudView == 2)
+    {
+      Serial6.print("dbat#");
+      Serial.println(" Ctrl Bat Temp = " + String(intTemp));
+      Serial.println(" Ctrl Bat V = " + String(batV));
+    }
+    sysClock = millis(); //Reset SysClock
+  }
+
   if (WiiMote == true)
   {
     boolean success = nchuk.update(); // Get new data from the controller
@@ -115,14 +158,15 @@ void loop()
     }
     else
     {
-      zButton = nchuk.buttonZ();
+      mode = nchuk.buttonZ();
+      //bool crtl = nchuk.buttonC();
       setpoint = nchuk.joyY();
-
-      // Serial.print(setpoint);
-      // Serial.print(" ");
-      // Serial.print(Steering);
-      // Serial.print(" ");
-      // Serial.println(zButton);
+      if (mode == 1 && WiiMote == true)
+      {
+        Serial5.print("setpoint");
+        Serial5.print(" ");
+        Serial5.println(setpoint);
+      }
     }
   }
   if (WiiMote == false)
@@ -130,19 +174,15 @@ void loop()
     Serial4.print("gfd#");
   }
   int POSsen = analogRead(POS_Sen);
-  // Serial.println(POSsen);
   POSsen = map(POSsen, 220, 1023, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
-  setpoint = map(setpoint, 0, 300, 0, 500);
+  setpoint = map(setpoint, 15, 230, 0, 500);
   setpoint = constrain(setpoint, 0, 500);
 
   if (mode == 1)
   {
     // Dynamic mode
-    // Serial.print(Input);
-    // Serial.print(" ");
-    // Serial.println(Setpoint);
     Setpoint = setpoint;
     delay(20);
     if (Input >= Setpoint - I_S_Offset &&
@@ -163,14 +203,14 @@ void loop()
   else if (mode == 2 && mode_set == false)
   {
     //hold mode
-    if (setpoint > 250)
+    if (setpoint > 400)
     {
       isOPen = !isOPen;
       Serial5.println(isOPen);
-      while (setpoint > 250)
+      while (setpoint > 400)
       {
         Serial4.print("gfd#");
-        setpoint = map(setpoint, 0, 300, 0, 500);
+        setpoint = map(setpoint, 25, 210, 0, 500);
         setpoint = constrain(setpoint, 0, 500);
       }
     }
@@ -185,6 +225,63 @@ void loop()
     }
     PID1.Compute();
     moveMotor(Output);
+    delay(250);
+  }
+}
+
+void serialEvent()
+{ // From HUDpc
+  Data_In = Serial.readStringUntil('#');
+  if (Data_In == "comm")
+  {
+    Serial5.println(Data_In);
+    Data_In = "";
+    sfx.println("#13");
+  }
+  else if (Data_In == "dash")
+  {
+    Serial5.println(Data_In);
+    Data_In = "";
+    sfx.println("#08");
+    Serial.println("Dash");
+  }
+  else if (Data_In == "config")
+  {
+    Serial5.println(Data_In);
+    Data_In = "";
+    sfx.println("#15");
+    Serial.println("Config");
+  }
+  else if (Data_In == "ctrlt")
+  {
+    hudView = 2;
+    sfx.println("#12");
+    Serial.println(" Ctrl Bat Temp = " + String(intTemp));
+    Serial.println(" Ctrl Bat V = " + String(batV));
+    Serial5.println(Data_In);
+    Data_In = "";
+  }
+  else if (Data_In == "exov")
+  {
+    hudView = 1;
+    // Serial.println(" Ctrl Bat Temp = " + String(intTemp));
+    Serial5.println(Data_In);
+    Data_In = "";
+  }
+}
+void serialEvent6()
+{ //Drive Battery Monitor
+  Data_In = Serial6.readStringUntil('#');
+  if (Data_In == "batMon")
+  {
+    Serial5.println("Drvie bat found");
+    Data_In = "";
+  }
+  else
+  {
+    //dbats[0] = Data_In.substring(0, Data_In.indexOf("@"));
+    dbats[0] = Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("-")).toFloat();
+    dbats[1] = Data_In.substring(Data_In.indexOf("-") + 1, Data_In.indexOf("#")).toFloat();
   }
 }
 
@@ -204,6 +301,8 @@ void serialEvent4()
     }
     Serial5.print(" mode = ");
     Serial5.println(mode);
+    Serial.print("mode = ");
+    Serial.println(String(mode));
   }
   else if (Data_In == "s")
   {
@@ -211,15 +310,20 @@ void serialEvent4()
     MotorController.Stop();
     MotorController.Disable();
     Serial5.println(" Config...");
+    Serial.println("config");
   }
   else if (Data_In == "a")
   {
     mode_set = false;
     Serial5.println(" armed...");
+    Serial.println("armed");
   }
   else if (mode_set == false && mode > 0)
   {
     setpoint = Data_In.toInt();
+    // Serial5.print("setpoint");
+    // Serial5.print(" ");
+    // Serial5.println(setpoint);
   }
   Data_In = "";
 }
@@ -244,5 +348,30 @@ void moveMotor(int val)
     MotorController.Stop();
     MotorController.Disable();
     //Serial5.println(" Stop");
+  }
+}
+
+void internalTemperature()
+{
+  int reading = analogRead(TEM_Sen);
+  float voltage = reading * 3.3;
+  voltage /= 1024.0;
+  float temp = (voltage - 0.5) * 100;
+  intTemp = int(temp);
+}
+
+void getDriveBatData()
+{
+  float K = 0.003300;
+  double cell_const = 1.3800;
+  double cellVoltage = analogRead(BAT_Sen) * K;
+  cellVoltage *= cell_const;
+  batV = cellVoltage;
+  if (batV < 3.15 && ctrlbat_low == false)
+  {
+    sfx.println("#07");
+    ctrlbat_low = true;
+    Serial.println("ctrlblow");
+    Serial5.println("Ctrl Battery Low!!!");
   }
 }
