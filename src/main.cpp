@@ -38,10 +38,13 @@ String Data_In = "";
 int POSsen = 0;
 int intTemp = 0;
 float batV = 0;
+int dbTemp = 0;
 bool ctrlbat_low = false;
-float dbats[4];
+float dbatv[4];
+float drivePwr = 0.0;
+int dbats[4];
 unsigned long sysClock;
-int updateTime = 500;
+int updateTime = 10000;
 int hudView = 0;
 
 int mode = 0;
@@ -106,6 +109,9 @@ void setup()
       sfx.println("#10");
     }
     intTemp = analogRead(TEM_Sen);
+    Serial6.print("dbt#");
+    Serial6.print("dbs#");
+    Serial6.print("dbv#");
   }
 
   delay(2500);
@@ -139,9 +145,13 @@ void loop()
     // update hudview
     if (hudView == 2)
     {
-      Serial6.print("dbat#");
-      Serial.println(" Ctrl Bat Temp = " + String(intTemp));
-      Serial.println(" Ctrl Bat V = " + String(batV));
+      Serial6.print("dbt#");
+      Serial6.print("dbs#");
+      Serial6.print("dbv#");
+      Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
+      Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
+      Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
+      Serial.println(" Ctrl Bat V = " + String(batV) + " V");
     }
     sysClock = millis(); //Reset SysClock
   }
@@ -256,8 +266,17 @@ void serialEvent()
   {
     hudView = 2;
     sfx.println("#12");
-    Serial.println(" Ctrl Bat Temp = " + String(intTemp));
-    Serial.println(" Ctrl Bat V = " + String(batV));
+    Serial6.print("dbs#");
+    Serial6.print("dbt#");
+    Serial6.print("dbv#");
+    Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
+    Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
+    Serial.println(" Cell 1 Status = " + String(dbats[0]));
+    Serial.println(" Cell 2 Status = " + String(dbats[1]));
+    Serial.println(" Cell 3 Status = " + String(dbats[2]));
+    Serial.println(" Cell 4 Status = " + String(dbats[3]));
+    Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
+    Serial.println(" Ctrl Bat V = " + String(batV) + " V");
     Serial5.println(Data_In);
     Data_In = "";
   }
@@ -279,9 +298,61 @@ void serialEvent6()
   }
   else
   {
-    //dbats[0] = Data_In.substring(0, Data_In.indexOf("@"));
-    dbats[0] = Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("-")).toFloat();
-    dbats[1] = Data_In.substring(Data_In.indexOf("-") + 1, Data_In.indexOf("#")).toFloat();
+    String type = Data_In.substring(0, Data_In.indexOf("@"));
+    if (type == "dbt")
+    {
+      dbTemp = Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("#")).toFloat();
+      // Serial5.println(Data_In);
+    }
+    else if (type == "dbv")
+    {
+      dbatv[0] = Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("-")).toFloat();
+      dbatv[1] = Data_In.substring(Data_In.indexOf("-") + 1, Data_In.indexOf(",")).toFloat();
+      dbatv[2] = Data_In.substring(Data_In.indexOf(",") + 1, Data_In.indexOf("_")).toFloat();
+      dbatv[3] = Data_In.substring(Data_In.indexOf("_") + 1, Data_In.indexOf("#")).toFloat();
+      drivePwr = dbatv[0] * 4;
+      // Serial5.println(dbatv[0]);
+      // Serial5.println(dbatv[1]);
+      // Serial5.println(dbatv[2]);
+      // Serial5.println(dbatv[3]);
+    }
+    else if (type == "dbs")
+    {
+      dbats[0] = Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("-")).toInt();
+      dbats[1] = Data_In.substring(Data_In.indexOf("-") + 1, Data_In.indexOf(",")).toInt();
+      dbats[2] = Data_In.substring(Data_In.indexOf(",") + 1, Data_In.indexOf("_")).toInt();
+      dbats[3] = Data_In.substring(Data_In.indexOf("_") + 1, Data_In.indexOf("#")).toInt();
+      // Serial5.println(dbats[0]);
+      // Serial5.println(dbats[1]);
+      // Serial5.println(dbats[2]);
+      // Serial5.println(dbats[3]);
+    }
+    else
+    {
+      Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("#"));
+      Serial.println(Data_In);
+    }
+    Data_In = "";
+  }
+}
+
+void serialEvent5()
+{
+  Data_In = Serial5.readStringUntil('#');
+  if (Data_In == "dbt")
+  {
+    Serial6.print("dbt#");
+    Data_In = "";
+  }
+  else if (Data_In == "dbv")
+  {
+    Serial6.print("dbv#");
+    Data_In = "";
+  }
+  else if (Data_In == "dbs")
+  {
+    Serial6.print("dbs#");
+    Data_In = "";
   }
 }
 
