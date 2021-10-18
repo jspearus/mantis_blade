@@ -259,7 +259,7 @@ void serialEvent()
   {
     Serial5.println(Data_In);
     Data_In = "";
-    sfx.println("#15");
+    sfx.println("#14");
     Serial.println("Config");
   }
   else if (Data_In == "ctrlt")
@@ -285,6 +285,33 @@ void serialEvent()
     hudView = 1;
     // Serial.println(" Ctrl Bat Temp = " + String(intTemp));
     Serial5.println(Data_In);
+    Data_In = "";
+  }
+  else if (Data_In == "modeS")
+  {
+    // Safe Mode from HUD
+    Serial5.println(Data_In);
+    mode = 0;
+    Serial.print("mode = ");
+    Serial.println(String(mode));
+    Data_In = "";
+  }
+  else if (Data_In == "modes")
+  {
+    // SYNC mode From HUD
+    Serial5.println(Data_In);
+    mode = 1;
+    Serial.print("mode = ");
+    Serial.println(String(mode));
+    Data_In = "";
+  }
+  else if (Data_In == "modeh")
+  {
+    // HOLD Mode from HUD
+    Serial5.println(Data_In);
+    mode = 2;
+    Serial.print("mode = ");
+    Serial.println(String(mode));
     Data_In = "";
   }
 }
