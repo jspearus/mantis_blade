@@ -245,6 +245,7 @@ void serialEvent()
   if (Data_In == "comm")
   {
     Serial5.println(Data_In);
+    Serial.println("MANTIS");
     Data_In = "";
     sfx.println("#13");
   }
