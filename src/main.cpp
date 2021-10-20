@@ -25,9 +25,9 @@ void serialEvent();
 void serial4Event();
 
 //############## PID Values ###############################
-int KP = 4; //4
-int KI = 1; //1
-int KD = 0; //0
+float KP = 3.5; //4
+float KI = 1.0; //1
+float KD = 0;   //0
 
 int I_S_Offset = 4; //5
 
@@ -148,6 +148,7 @@ void loop()
       Serial6.print("dbt#");
       Serial6.print("dbs#");
       Serial6.print("dbv#");
+      // todo fix motherboard to hud serial protocol
       Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
       Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
       Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
@@ -171,6 +172,8 @@ void loop()
       mode = nchuk.buttonZ();
       //bool crtl = nchuk.buttonC();
       setpoint = nchuk.joyY();
+      setpoint = map(setpoint, 0, 255, 0, 500);
+      setpoint = constrain(setpoint, 0, 500);
       if (mode == 1 && WiiMote == true)
       {
         Serial5.print("setpoint");
@@ -183,11 +186,12 @@ void loop()
   {
     Serial4.print("gfd#");
   }
-  int POSsen = analogRead(POS_Sen);
-  POSsen = map(POSsen, 220, 1023, 0, 500);
+  int POSread = analogRead(POS_Sen);
+  // Serial5.println(POSread); //               POSsen OUTPUT########################
+  int POSsen = map(POSread, 220, 970, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
-  setpoint = map(setpoint, 15, 230, 0, 500);
+  setpoint = map(setpoint, 0, 200, 0, 500);
   setpoint = constrain(setpoint, 0, 500);
 
   if (mode == 1)
@@ -270,6 +274,7 @@ void serialEvent()
     Serial6.print("dbs#");
     Serial6.print("dbt#");
     Serial6.print("dbv#");
+    // todo fix motherboard to hud serial protocol
     Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
     Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
     Serial.println(" Cell 1 Status = " + String(dbats[0]));
@@ -293,6 +298,9 @@ void serialEvent()
     // Safe Mode from HUD
     Serial5.println(Data_In);
     mode = 0;
+    Setpoint = 5;
+    PID1.Compute();
+    moveMotor(Output);
     Serial.print("mode = ");
     Serial.println(String(mode));
     Data_In = "";
@@ -365,7 +373,7 @@ void serialEvent6()
 }
 
 void serialEvent5()
-{
+{ //From XBee
   Data_In = Serial5.readStringUntil('#');
   if (Data_In == "dbt")
   {
@@ -382,12 +390,27 @@ void serialEvent5()
     Serial6.print("dbs#");
     Data_In = "";
   }
+  else if (Data_In == "mbo")
+  {
+    Setpoint = 500;
+    PID1.Compute();
+    moveMotor(Output);
+    Data_In = "";
+  }
+  else if (Data_In == "mbc")
+  {
+    Setpoint = 0;
+    PID1.Compute();
+    moveMotor(Output);
+    Data_In = "";
+  }
 }
 
 void serialEvent4()
 { //from Sensor Glove
   // add it to the inputString:
   Data_In = Serial4.readStringUntil('#');
+  // Serial5.println(Data_In); //               SensorGlove OUTPUT ########################
   if (Data_In == "mode")
   {
     if (mode < 2)
@@ -406,8 +429,9 @@ void serialEvent4()
   else if (Data_In == "s")
   {
     mode_set = true;
-    MotorController.Stop();
-    MotorController.Disable();
+    Setpoint = 0;
+    PID1.Compute();
+    moveMotor(Output);
     Serial5.println(" Config...");
     Serial.println("config");
   }
