@@ -44,7 +44,7 @@ float dbatv[4];
 float drivePwr = 0.0;
 int dbats[4];
 unsigned long sysClock;
-int updateTime = 10000;
+int updateTime = 5000;
 int hudView = 0;
 
 int mode = 0;
@@ -143,17 +143,20 @@ void loop()
     internalTemperature();
     getDriveBatData();
     // update hudview
-    if (hudView == 2)
-    {
+    // if (hudView == 2)
+    // {
       Serial6.print("dbt#");
       Serial6.print("dbs#");
       Serial6.print("dbv#");
       // todo fix motherboard to hud serial protocol
-      Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
-      Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
-      Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
-      Serial.println(" Ctrl Bat V = " + String(batV) + " V");
-    }
+      // Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
+      // Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
+      // Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
+      // Serial.println(" Ctrl Bat V = " + String(batV) + " V");
+      Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(dbats[0]) +
+                     "," + String(dbats[1]) + "," + String(dbats[2]) +
+                     "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    // }
     sysClock = millis(); //Reset SysClock
   }
 
@@ -249,7 +252,7 @@ void serialEvent()
   if (Data_In == "comm")
   {
     Serial5.println(Data_In);
-    Serial.println("MANTIS");
+    Serial.println("MANTIS,");
     Data_In = "";
     sfx.println("#13");
   }
@@ -258,14 +261,14 @@ void serialEvent()
     Serial5.println(Data_In);
     Data_In = "";
     sfx.println("#08");
-    Serial.println("Dash");
+    Serial.println("Dash,");
   }
   else if (Data_In == "config")
   {
     Serial5.println(Data_In);
     Data_In = "";
     sfx.println("#14");
-    Serial.println("Config");
+    Serial.println("Config,");
   }
   else if (Data_In == "ctrlt")
   {
@@ -275,14 +278,17 @@ void serialEvent()
     Serial6.print("dbt#");
     Serial6.print("dbv#");
     // todo fix motherboard to hud serial protocol
-    Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
-    Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
-    Serial.println(" Cell 1 Status = " + String(dbats[0]));
-    Serial.println(" Cell 2 Status = " + String(dbats[1]));
-    Serial.println(" Cell 3 Status = " + String(dbats[2]));
-    Serial.println(" Cell 4 Status = " + String(dbats[3]));
-    Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
-    Serial.println(" Ctrl Bat V = " + String(batV) + " V");
+    // Serial.println(" Drv_Pwr = " + String(drivePwr) + ",");
+    // Serial.println(" Drv Bat Temp = " + String(dbTemp) + ",");
+    // Serial.println(" Cell 1 Status = " + String(dbats[0]));
+    // Serial.println(" Cell 2 Status = " + String(dbats[1]));
+    // Serial.println(" Cell 3 Status = " + String(dbats[2]));
+    // Serial.println(" Cell 4 Status = " + String(dbats[3]));
+    // Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
+    // Serial.println(" Ctrl Bat V = " + String(batV) + " V");
+    Serial.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(dbats[0]) +
+                   "," + String(dbats[1]) + ',' + String(dbats[2]) +
+                   "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     Serial5.println(Data_In);
     Data_In = "";
   }
@@ -320,7 +326,7 @@ void serialEvent()
     Serial5.println(Data_In);
     mode = 2;
     Serial.print("mode = ");
-    Serial.println(String(mode));
+    Serial.println(String(mode) + ',');
     Data_In = "";
   }
 }
