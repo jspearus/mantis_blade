@@ -145,17 +145,12 @@ void loop()
     // update hudview
     // if (hudView == 2)
     // {
-      Serial6.print("dbt#");
-      Serial6.print("dbs#");
-      Serial6.print("dbv#");
-      // todo fix motherboard to hud serial protocol
-      // Serial.println(" Drv_Pwr = " + String(drivePwr) + " V");
-      // Serial.println(" Drv Bat Temp = " + String(dbTemp) + " C");
-      // Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
-      // Serial.println(" Ctrl Bat V = " + String(batV) + " V");
-      Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(dbats[0]) +
-                     "," + String(dbats[1]) + "," + String(dbats[2]) +
-                     "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial6.print("dbt#");
+    Serial6.print("dbs#");
+    Serial6.print("dbv#");
+    Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(dbats[0]) +
+                   "," + String(dbats[1]) + "," + String(dbats[2]) +
+                   "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     // }
     sysClock = millis(); //Reset SysClock
   }
@@ -277,15 +272,6 @@ void serialEvent()
     Serial6.print("dbs#");
     Serial6.print("dbt#");
     Serial6.print("dbv#");
-    // todo fix motherboard to hud serial protocol
-    // Serial.println(" Drv_Pwr = " + String(drivePwr) + ",");
-    // Serial.println(" Drv Bat Temp = " + String(dbTemp) + ",");
-    // Serial.println(" Cell 1 Status = " + String(dbats[0]));
-    // Serial.println(" Cell 2 Status = " + String(dbats[1]));
-    // Serial.println(" Cell 3 Status = " + String(dbats[2]));
-    // Serial.println(" Cell 4 Status = " + String(dbats[3]));
-    // Serial.println(" Ctrl Bat Temp = " + String(intTemp) + " C");
-    // Serial.println(" Ctrl Bat V = " + String(batV) + " V");
     Serial.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(dbats[0]) +
                    "," + String(dbats[1]) + ',' + String(dbats[2]) +
                    "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
