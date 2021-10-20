@@ -43,6 +43,7 @@ bool ctrlbat_low = false;
 float dbatv[4];
 float drivePwr = 0.0;
 int dbats[4];
+String Dbats[4];
 unsigned long sysClock;
 int updateTime = 5000;
 int hudView = 0;
@@ -148,9 +149,9 @@ void loop()
     Serial6.print("dbt#");
     Serial6.print("dbs#");
     Serial6.print("dbv#");
-    Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(dbats[0]) +
-                   "," + String(dbats[1]) + "," + String(dbats[2]) +
-                   "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(Dbats[0]) +
+                   "," + String(Dbats[1]) + "," + String(Dbats[2]) +
+                   "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     // }
     sysClock = millis(); //Reset SysClock
   }
@@ -272,9 +273,9 @@ void serialEvent()
     Serial6.print("dbs#");
     Serial6.print("dbt#");
     Serial6.print("dbv#");
-    Serial.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(dbats[0]) +
-                   "," + String(dbats[1]) + ',' + String(dbats[2]) +
-                   "," + String(dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(Dbats[0]) +
+                   "," + String(Dbats[1]) + ',' + String(Dbats[2]) +
+                   "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     Serial5.println(Data_In);
     Data_In = "";
   }
@@ -354,6 +355,21 @@ void serialEvent6()
       // Serial5.println(dbats[1]);
       // Serial5.println(dbats[2]);
       // Serial5.println(dbats[3]);
+      for (int i = 0; i < 4; i++)
+      {
+        if (dbats[i] == 0)
+        {
+          Dbats[i] = "LOW!!";
+        }
+        else if (dbats[i] == 1)
+        {
+          Dbats[i] = "Good";
+        }
+        else if (dbats[i] == 2)
+        {
+          Dbats[i] = "Full";
+        }
+      }
     }
     else
     {
