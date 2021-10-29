@@ -25,11 +25,11 @@ void serialEvent();
 void serial4Event();
 
 //############## PID Values ###############################
-float KP = 3.5; //4
-float KI = 1.0; //1
-float KD = 0;   //0
+float KP = 3.5; // 4
+float KI = 1.0; // 1
+float KD = 0;   // 0
 
-int I_S_Offset = 4; //5
+int I_S_Offset = 4; // 5
 
 int setpoint = 0;
 
@@ -55,13 +55,13 @@ boolean WiiMote = true;
 
 bool isOPen = false;
 
-//PID Variablesd
+// PID Variablesd
 double Setpoint, Input, Output;
 
-//Specify the links and initial tuning parameters
+// Specify the links and initial tuning parameters
 PID PID1(&Input, &Output, &Setpoint, KP, KI, KD, P_ON_E, DIRECT);
-//P_ON_M specifies that Proportional on Measurement be used
-//P_ON_E (Proportional on Error) is the default behavior
+// P_ON_M specifies that Proportional on Measurement be used
+// P_ON_E (Proportional on Error) is the default behavior
 
 //####################FUNCTION DECLARATIONS #############################
 void internalTemperature();
@@ -74,13 +74,13 @@ Nunchuk nchuk;
 
 void setup()
 {
-  Serial.begin(115200);  //PC Debug
-  Serial3.begin(9600);   ///SoundBoard Port
-  Serial4.begin(115200); ///Sensor Glove Port
+  Serial.begin(115200);  // PC Debug
+  Serial3.begin(9600);   /// SoundBoard Port
+  Serial4.begin(115200); /// Sensor Glove Port
   Serial4.setTimeout(50);
   Serial5.begin(9600); // XBee port
   Serial5.setTimeout(50);
-  Serial6.begin(115200); ///Drive Battery Monitor Port
+  Serial6.begin(115200); /// Drive Battery Monitor Port
   Serial6.setTimeout(50);
   delay(3000);
   Serial.println("mantis_blade Initializing...");
@@ -116,7 +116,7 @@ void setup()
   }
 
   delay(2500);
-  //turn the PID on and set parameters
+  // turn the PID on and set parameters
   PID1.SetMode(AUTOMATIC);
   PID1.SetOutputLimits(-255, 255);
   PID1.SetSampleTime(10);
@@ -124,7 +124,7 @@ void setup()
   Serial5.println(" PID ready..");
   Serial5.print(" Mode = ");
   Serial5.println(mode);
-  sfx.println("#09");
+  sfx.println("#02");
   Serial5.print("Internal Temp = ");
   internalTemperature();
   Serial5.println(intTemp);
@@ -140,20 +140,16 @@ void loop()
 {
   // update system clock
   if (sysClock + updateTime < millis())
-  {
+  { // update BateSry and Temp data
     internalTemperature();
     getDriveBatData();
-    // update hudview
-    // if (hudView == 2)
-    // {
     Serial6.print("dbt#");
     Serial6.print("dbs#");
     Serial6.print("dbv#");
     Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(Dbats[0]) +
                    "," + String(Dbats[1]) + "," + String(Dbats[2]) +
                    "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
-    // }
-    sysClock = millis(); //Reset SysClock
+    sysClock = millis(); // Reset SysClock
   }
 
   if (WiiMote == true)
@@ -169,7 +165,7 @@ void loop()
     else
     {
       mode = nchuk.buttonZ();
-      //bool crtl = nchuk.buttonC();
+      // bool crtl = nchuk.buttonC();
       setpoint = nchuk.joyY();
       setpoint = map(setpoint, 0, 255, 0, 500);
       setpoint = constrain(setpoint, 0, 500);
@@ -190,11 +186,12 @@ void loop()
   int POSsen = map(POSread, 220, 970, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
-  setpoint = map(setpoint, 0, 200, 0, 500);
+  setpoint = map(setpoint, 15, 210, 0, 500);
   setpoint = constrain(setpoint, 0, 500);
 
-  if (mode == 1)
+  if (mode == 1 && mode_set == false)
   {
+    isOPen = false;
     // Dynamic mode
     Setpoint = setpoint;
     delay(20);
@@ -215,7 +212,7 @@ void loop()
 
   else if (mode == 2 && mode_set == false)
   {
-    //hold mode
+    // hold mode
     if (setpoint > 400)
     {
       isOPen = !isOPen;
@@ -239,6 +236,13 @@ void loop()
     PID1.Compute();
     moveMotor(Output);
     delay(250);
+  }
+  else if (mode == 0 && mode_set == false)
+  {
+    isOPen = false;
+    Setpoint = 0;
+    PID1.Compute();
+    moveMotor(Output);
   }
 }
 
@@ -311,6 +315,7 @@ void serialEvent()
   {
     // HOLD Mode from HUD
     Serial5.println(Data_In);
+    isOPen = false;
     mode = 2;
     Serial.print("mode = ");
     Serial.println(String(mode) + ',');
@@ -318,7 +323,7 @@ void serialEvent()
   }
 }
 void serialEvent6()
-{ //Drive Battery Monitor
+{ // Drive Battery Monitor
   Data_In = Serial6.readStringUntil('#');
   if (Data_In == "batMon")
   {
@@ -381,7 +386,7 @@ void serialEvent6()
 }
 
 void serialEvent5()
-{ //From XBee
+{ // From XBee
   Data_In = Serial5.readStringUntil('#');
   if (Data_In == "dbt")
   {
@@ -407,7 +412,7 @@ void serialEvent5()
   }
   else if (Data_In == "mbc")
   {
-    Setpoint = 0;
+    Setpoint = 10;
     PID1.Compute();
     moveMotor(Output);
     Data_In = "";
@@ -415,11 +420,11 @@ void serialEvent5()
 }
 
 void serialEvent4()
-{ //from Sensor Glove
+{ // from Sensor Glove
   // add it to the inputString:
   Data_In = Serial4.readStringUntil('#');
   // Serial5.println(Data_In); //               SensorGlove OUTPUT ########################
-  if (Data_In == "mode")
+  if (Data_In == "mode" && mode_set == true)
   {
     if (mode < 2)
     {
@@ -436,7 +441,9 @@ void serialEvent4()
   }
   else if (Data_In == "s")
   {
+    sfx.println("#03");
     mode_set = true;
+    isOPen = false;
     Setpoint = 0;
     PID1.Compute();
     moveMotor(Output);
@@ -445,6 +452,14 @@ void serialEvent4()
   }
   else if (Data_In == "a")
   {
+    if (mode > 0)
+    {
+      sfx.println("#17");
+    }
+    else
+    {
+      sfx.println("#11");
+    }
     mode_set = false;
     Serial5.println(" armed...");
     Serial.println("armed");
@@ -465,20 +480,20 @@ void moveMotor(int val)
   {
     MotorController.Enable();
     MotorController.TurnLeft(val);
-    //Serial5.println(" Out");
+    // Serial5.println(" Out");
   }
   else if (val < -3)
   {
     val = val * -1;
     MotorController.Enable();
     MotorController.TurnRight(val);
-    //Serial5.println(" IN");
+    // Serial5.println(" IN");
   }
   else
   {
     MotorController.Stop();
     MotorController.Disable();
-    //Serial5.println(" Stop");
+    // Serial5.println(" Stop");
   }
 }
 
