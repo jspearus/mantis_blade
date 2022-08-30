@@ -326,7 +326,6 @@ void serialEvent()
 }
 void serialEvent7()
 { // From CberDec
-  Serial5.println("found");
   Data_In = Serial7.readStringUntil('#');
   if (Data_In == "comm")
   {
