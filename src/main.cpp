@@ -82,6 +82,8 @@ void setup()
   Serial5.setTimeout(50);
   Serial6.begin(115200); /// Drive Battery Monitor Port
   Serial6.setTimeout(50);
+  Serial7.begin(115200); /// Cyberdeck Port
+
   delay(3000);
   Serial.println("mantis_blade Initializing...");
   Serial5.println("mantis_blade Initializing...");
@@ -322,6 +324,83 @@ void serialEvent()
     Data_In = "";
   }
 }
+void serialEvent7()
+{ // From CberDec
+  Serial5.println("found");
+  Data_In = Serial7.readStringUntil('#');
+  if (Data_In == "comm")
+  {
+    Serial5.println(Data_In);
+    Serial7.println("MANTIS,");
+    Data_In = "";
+    sfx.println("#13");
+  }
+  else if (Data_In == "dash")
+  {
+    Serial5.println(Data_In);
+    Data_In = "";
+    sfx.println("#08");
+    Serial7.println("Dash,");
+  }
+  else if (Data_In == "config")
+  {
+    Serial5.println(Data_In);
+    Data_In = "";
+    sfx.println("#14");
+    Serial7.println("Config,");
+  }
+  else if (Data_In == "ctrlt")
+  {
+    hudView = 2;
+    sfx.println("#12");
+    Serial6.print("dbs#");
+    Serial6.print("dbt#");
+    Serial6.print("dbv#");
+    Serial7.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(Dbats[0]) +
+                    "," + String(Dbats[1]) + ',' + String(Dbats[2]) +
+                    "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial5.println(Data_In);
+    Data_In = "";
+  }
+  else if (Data_In == "exov")
+  {
+    hudView = 1;
+    // Serial.println(" Ctrl Bat Temp = " + String(intTemp));
+    Serial5.println(Data_In);
+    Data_In = "";
+  }
+  else if (Data_In == "modeS")
+  {
+    // Safe Mode from HUD
+    Serial5.println(Data_In);
+    mode = 0;
+    Setpoint = 5;
+    PID1.Compute();
+    moveMotor(Output);
+    Serial7.print("mode = ");
+    Serial7.println(String(mode));
+    Data_In = "";
+  }
+  else if (Data_In == "modes")
+  {
+    // SYNC mode From HUD
+    Serial5.println(Data_In);
+    mode = 1;
+    Serial7.print("mode = ");
+    Serial7.println(String(mode));
+    Data_In = "";
+  }
+  else if (Data_In == "modeh")
+  {
+    // HOLD Mode from HUD
+    Serial5.println(Data_In);
+    isOPen = false;
+    mode = 2;
+    Serial7.print("mode = ");
+    Serial7.println(String(mode) + ',');
+    Data_In = "";
+  }
+}
 void serialEvent6()
 { // Drive Battery Monitor
   Data_In = Serial6.readStringUntil('#');
@@ -396,6 +475,11 @@ void serialEvent5()
   else if (Data_In == "dbv")
   {
     Serial6.print("dbv#");
+    Data_In = "";
+  }
+  else if (Data_In == "ping")
+  {
+    Serial5.print("HERE");
     Data_In = "";
   }
   else if (Data_In == "dbs")
