@@ -148,9 +148,9 @@ void loop()
     Serial6.print("dbt#");
     Serial6.print("dbs#");
     Serial6.print("dbv#");
-    Serial.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(Dbats[0]) +
-                   "," + String(Dbats[1]) + "," + String(Dbats[2]) +
-                   "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial7.println("stat," + String(drivePwr) + "," + String(dbTemp) + "," + String(Dbats[0]) +
+                    "," + String(Dbats[1]) + "," + String(Dbats[2]) +
+                    "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     sysClock = millis(); // Reset SysClock
   }
 
@@ -254,7 +254,7 @@ void serialEvent()
   if (Data_In == "comm")
   {
     Serial5.println(Data_In);
-    Serial.println("MANTIS,");
+    Serial7.println("MANTIS,");
     Data_In = "";
     sfx.println("#13");
   }
@@ -263,14 +263,14 @@ void serialEvent()
     Serial5.println(Data_In);
     Data_In = "";
     sfx.println("#08");
-    Serial.println("Dash,");
+    Serial7.println("Dash,");
   }
   else if (Data_In == "config")
   {
     Serial5.println(Data_In);
     Data_In = "";
     sfx.println("#14");
-    Serial.println("Config,");
+    Serial7.println("Config,");
   }
   else if (Data_In == "ctrlt")
   {
@@ -279,9 +279,9 @@ void serialEvent()
     Serial6.print("dbs#");
     Serial6.print("dbt#");
     Serial6.print("dbv#");
-    Serial.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(Dbats[0]) +
-                   "," + String(Dbats[1]) + ',' + String(Dbats[2]) +
-                   "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
+    Serial7.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(Dbats[0]) +
+                    "," + String(Dbats[1]) + ',' + String(Dbats[2]) +
+                    "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
     Serial5.println(Data_In);
     Data_In = "";
   }
@@ -300,8 +300,8 @@ void serialEvent()
     Setpoint = 5;
     PID1.Compute();
     moveMotor(Output);
-    Serial.print("mode = ");
-    Serial.println(String(mode));
+    Serial7.print("mode = ");
+    Serial7.println(String(mode));
     Data_In = "";
   }
   else if (Data_In == "modes")
@@ -309,8 +309,8 @@ void serialEvent()
     // SYNC mode From HUD
     Serial5.println(Data_In);
     mode = 1;
-    Serial.print("mode = ");
-    Serial.println(String(mode));
+    Serial7.print("mode = ");
+    Serial7.println(String(mode));
     Data_In = "";
   }
   else if (Data_In == "modeh")
@@ -319,13 +319,13 @@ void serialEvent()
     Serial5.println(Data_In);
     isOPen = false;
     mode = 2;
-    Serial.print("mode = ");
-    Serial.println(String(mode) + ',');
+    Serial7.print("mode = ");
+    Serial7.println(String(mode) + ',');
     Data_In = "";
   }
 }
 void serialEvent7()
-{ // From CberDec
+{ // From CyberDeck
   Data_In = Serial7.readStringUntil('#');
   if (Data_In == "comm")
   {
@@ -457,7 +457,7 @@ void serialEvent6()
     else
     {
       Data_In.substring(Data_In.indexOf("@") + 1, Data_In.indexOf("#"));
-      Serial.println(Data_In);
+      Serial7.println(Data_In);
     }
     Data_In = "";
   }
@@ -519,8 +519,8 @@ void serialEvent4()
     }
     Serial5.print(" mode = ");
     Serial5.println(mode);
-    Serial.print("mode = ");
-    Serial.println(String(mode));
+    Serial7.print("mode = ");
+    Serial7.println(String(mode));
   }
   else if (Data_In == "s")
   {
@@ -531,7 +531,7 @@ void serialEvent4()
     PID1.Compute();
     moveMotor(Output);
     Serial5.println(" Config...");
-    Serial.println("config");
+    Serial7.println("config");
   }
   else if (Data_In == "a")
   {
@@ -545,7 +545,7 @@ void serialEvent4()
     }
     mode_set = false;
     Serial5.println(" armed...");
-    Serial.println("armed");
+    Serial7.println("armed");
   }
   else if (mode_set == false && mode > 0)
   {
@@ -600,7 +600,7 @@ void getDriveBatData()
   {
     sfx.println("#07");
     ctrlbat_low = true;
-    Serial.println("ctrlblow");
+    Serial7.println("ctrlblow");
     Serial5.println("Ctrl Battery Low!!!");
   }
 }
