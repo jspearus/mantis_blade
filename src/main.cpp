@@ -33,6 +33,12 @@ int I_S_Offset = 4; // 5
 
 int setpoint = 0;
 
+int PosMIN = 190;
+int PosMAX = 1000;
+
+int SetpointMIN = 15;
+int SetpointMAX = 210;
+
 //############################ VARIABLES ########################################
 String Data_In = "";
 int POSsen = 0;
@@ -184,11 +190,13 @@ void loop()
     Serial4.print("gfd#");
   }
   int POSread = analogRead(POS_Sen);
-  // Serial5.println(POSread); //               POSsen OUTPUT########################
-  int POSsen = map(POSread, 220, 970, 0, 500);
+  Serial.println(POSread); //               POSsen OUTPUT########################
+  int POSsen = map(POSread, PosMIN, PosMAX, 0, 500);
+  // Serial.print("Possition: ");
+  // Serial.println(POSsen);
   POSsen = constrain(POSsen, 0, 500);
   Input = POSsen;
-  setpoint = map(setpoint, 15, 210, 0, 500);
+  setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
   setpoint = constrain(setpoint, 0, 500);
 
   if (mode == 1 && mode_set == false)
@@ -555,9 +563,9 @@ void serialEvent4()
   else if (mode_set == false && mode > 0)
   {
     setpoint = Data_In.toInt();
-    // Serial5.print("setpoint");
-    // Serial5.print(" ");
-    // Serial5.println(setpoint);
+    //   Serial.print("setpoint");
+    //   Serial.print(" ");
+    //   Serial.println(setpoint);
   }
   Data_In = "";
 }
