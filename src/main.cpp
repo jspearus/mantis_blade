@@ -507,7 +507,11 @@ void serialEvent4()
   // add it to the inputString:
   Data_In = Serial4.readStringUntil('#');
   // Serial5.println(Data_In); //               SensorGlove OUTPUT ########################
-  if (Data_In == "mode" && mode_set == true)
+  if (Data_In == "sglove")
+  {
+    sfx.println("#10");
+  }
+  else if (Data_In == "mode" && mode_set == true)
   {
     if (mode < 2)
     {
@@ -522,6 +526,7 @@ void serialEvent4()
     Serial7.print("mode = ");
     Serial7.println(String(mode));
   }
+
   else if (Data_In == "s")
   {
     sfx.println("#03");
