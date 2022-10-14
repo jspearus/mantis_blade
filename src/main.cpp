@@ -33,8 +33,8 @@ int I_S_Offset = 4; // 5
 
 int setpoint = 0;
 
-int PosMIN = 190;
-int PosMAX = 1000;
+int PosMIN = 200; // Extended
+int PosMAX = 850; // Retracted
 
 int SetpointMIN = 15;
 int SetpointMAX = 210;
@@ -230,7 +230,7 @@ void loop()
       while (setpoint > 400)
       {
         Serial4.print("gfd#");
-        setpoint = map(setpoint, 25, 210, 0, 500);
+        setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
         setpoint = constrain(setpoint, 0, 500);
       }
     }
@@ -246,6 +246,25 @@ void loop()
     PID1.Compute();
     moveMotor(Output);
     delay(250);
+  }
+  if (mode == 3 && mode_set == false)
+  {
+    isOPen = false;
+    // Dynamic mode
+    delay(20);
+    if (Input >= Setpoint - I_S_Offset &&
+        Input <= Setpoint + I_S_Offset)
+    {
+      Output = 0.0;
+    }
+    else
+    {
+      PID1.Compute();
+    }
+    if (mode_set == false && mode > 0)
+    {
+      moveMotor(Output);
+    }
   }
   else if (mode == 0 && mode_set == false)
   {
@@ -497,15 +516,31 @@ void serialEvent5()
   else if (Data_In == "mbo")
   {
     Setpoint = 500;
-    PID1.Compute();
-    moveMotor(Output);
-    Data_In = "";
   }
   else if (Data_In == "mbc")
   {
     Setpoint = 10;
     PID1.Compute();
     moveMotor(Output);
+    Data_In = "";
+  }
+  else if (Data_In == "set")
+  {
+    Serial5.print("SetPoint: ");
+    Serial5.println(Setpoint);
+    Serial5.print("setPoint: ");
+    Serial5.println(setpoint);
+  }
+  else
+  {
+    mode = 3;
+    Serial5.print("SetPoint: ");
+    Serial5.println(Data_In.toInt());
+    Serial5.print("Input: ");
+    Serial5.println(Input);
+    Setpoint = Data_In.toInt();
+    Serial5.print("OutPut: ");
+    Serial5.println(Output);
     Data_In = "";
   }
 }
