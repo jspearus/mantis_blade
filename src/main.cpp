@@ -29,15 +29,15 @@ float KP = 3.5; // 4
 float KI = 1.0; // 1
 float KD = 0;   // 0
 
-int I_S_Offset = 4; // 5
+int I_S_Offset = 3; // 5
 
 int setpoint = 0;
 
 int PosMIN = 200; // Extended
-int PosMAX = 850; // Retracted
+int PosMAX = 625; // Retracted
 
-int SetpointMIN = 15;
-int SetpointMAX = 210;
+int SetpointMIN = 22;
+int SetpointMAX = 150;
 
 //############################ VARIABLES ########################################
 String Data_In = "";
@@ -117,6 +117,10 @@ void setup()
       Serial5.println(" Nunchuk Connected...");
       sfx.println("#10");
     }
+    Serial5.print(" Min POS:- ");
+    Serial5.println(PosMIN);
+    Serial5.print("Max POS:- ");
+    Serial5.println(PosMAX);
     intTemp = analogRead(TEM_Sen);
     Serial6.print("dbt#");
     Serial6.print("dbs#");
@@ -192,12 +196,17 @@ void loop()
   int POSread = analogRead(POS_Sen);
   Serial.println(POSread); //               POSsen OUTPUT########################
   int POSsen = map(POSread, PosMIN, PosMAX, 0, 500);
-  // Serial.print("Possition: ");
-  // Serial.println(POSsen);
   POSsen = constrain(POSsen, 0, 500);
+
+  // Serial5.print("Possition: ");
+  // Serial5.print(POSsen);
+
   Input = POSsen;
   setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
   setpoint = constrain(setpoint, 0, 500);
+
+  // Serial5.print(" setPoint: ");
+  // Serial5.println(setpoint);
 
   if (mode == 1 && mode_set == false)
   {
@@ -416,6 +425,16 @@ void serialEvent7()
     Serial7.println(String(mode));
     Data_In = "";
   }
+  else if (Data_In == "modeq")
+  {
+    // Quick Click Mode
+    Serial5.println(Data_In);
+    isOPen = false;
+    mode = 4;
+    Serial7.print("mode = ");
+    Serial7.println(String(mode) + ',');
+    Data_In = "";
+  }
   else if (Data_In == "modeh")
   {
     // HOLD Mode from HUD
@@ -598,9 +617,9 @@ void serialEvent4()
   else if (mode_set == false && mode > 0)
   {
     setpoint = Data_In.toInt();
-    //   Serial.print("setpoint");
-    //   Serial.print(" ");
-    //   Serial.println(setpoint);
+    // Serial5.print("setpoint");
+    // Serial5.print(" ");
+    // Serial5.println(setpoint);
   }
   Data_In = "";
 }
