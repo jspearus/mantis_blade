@@ -40,6 +40,8 @@ int PosMAX = 780; // Retracted
 int SetpointMIN = 15;
 int SetpointMAX = 140;
 
+int maxInputRange = 750;
+
 //############################ VARIABLES ########################################
 String Data_In = "";
 int POSsen = 0;
@@ -185,8 +187,8 @@ void loop()
       mode = nchuk.buttonZ();
       // bool crtl = nchuk.buttonC();
       setpoint = nchuk.joyY();
-      setpoint = map(setpoint, 0, 255, 0, 500);
-      setpoint = constrain(setpoint, 0, 500);
+      setpoint = map(setpoint, 0, 255, 0, maxInputRange);
+      setpoint = constrain(setpoint, 0, maxInputRange);
       if (mode == 1 && WiiMote == true)
       {
         Serial5.print("setpoint");
@@ -203,15 +205,15 @@ void loop()
     }
   }
   int POSread = analogRead(POS_Sen);
-  int POSsen = map(POSread, PosMIN, PosMAX, 0, 500);
-  POSsen = constrain(POSsen, 0, 500);
+  int POSsen = map(POSread, PosMIN, PosMAX, 0, maxInputRange);
+  POSsen = constrain(POSsen, 0, maxInputRange);
 
   // Serial5.print("Position: ");
   // Serial5.print(POSread);
 
   Input = POSsen;
-  setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
-  setpoint = constrain(setpoint, 0, 500);
+  setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, maxInputRange);
+  setpoint = constrain(setpoint, 0, maxInputRange);
 
   // Serial5.print(" setPoint: ");
   // Serial5.println(setpoint);
@@ -247,11 +249,11 @@ void loop()
     {
       isOPen = !isOPen;
       Serial5.println(isOPen);
-      while (setpoint > 400)
+      while (setpoint > maxInputRange * .8)
       {
         Serial4.print("gfd#");
-        setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
-        setpoint = constrain(setpoint, 0, 500);
+        setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, maxInputRange);
+        setpoint = constrain(setpoint, 0, maxInputRange);
       }
     }
     if (isOPen == false)
@@ -261,7 +263,7 @@ void loop()
 
     else if (isOPen == true)
     {
-      Setpoint = 500;
+      Setpoint = maxInputRange;
     }
     if (Input >= Setpoint - I_S_Offset &&
         Input <= Setpoint + I_S_Offset)
@@ -482,7 +484,7 @@ void serialEvent5()
   }
   else if (Data_In == "mbo")
   {
-    Setpoint = 500;
+    Setpoint = maxInputRange;
   }
   else if (Data_In == "mbc")
   {
