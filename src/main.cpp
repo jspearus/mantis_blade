@@ -249,7 +249,7 @@ void loop()
     {
       isOPen = !isOPen;
       Serial5.println(isOPen);
-      while (setpoint > maxInputRange * .8)
+      while (setpoint > (maxInputRange * .8))
       {
         Serial4.print("gfd#");
         setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, maxInputRange);
