@@ -56,6 +56,7 @@ int hudView = 0;
 
 int mode = 0;
 bool mode_set = false;
+bool quick_mode = false;
 
 boolean WiiMote = true;
 
@@ -80,18 +81,22 @@ Nunchuk nchuk;
 
 void setup()
 {
-  Serial.begin(115200);  // PC Debug
-  Serial3.begin(9600);   /// SoundBoard Port
+  Serial3.begin(9600); /// SoundBoard Port
+  Serial3.setTimeout(50);
+
   Serial4.begin(115200); /// Sensor Glove Port
   Serial4.setTimeout(50);
+
   Serial5.begin(9600); // XBee port
   Serial5.setTimeout(50);
+
   Serial6.begin(115200); /// Drive Battery Monitor Port
   Serial6.setTimeout(50);
+
   Serial7.begin(115200); /// Cyberdeck Port
+  Serial7.setTimeout(50);
 
   delay(3000);
-  Serial.println("mantis_blade Initializing...");
   Serial5.println("mantis_blade Initializing...");
   if (!sfx.reset())
   {
@@ -191,10 +196,12 @@ void loop()
   }
   if (WiiMote == false)
   {
-    Serial4.print("gfd#");
+    if (mode > 0)
+    {
+      Serial4.print("gfd#");
+    }
   }
   int POSread = analogRead(POS_Sen);
-  Serial.println(POSread); //               POSsen OUTPUT########################
   int POSsen = map(POSread, PosMIN, PosMAX, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
 
@@ -284,82 +291,6 @@ void loop()
   }
 }
 
-void serialEvent()
-{ // From HUDpc
-  Data_In = Serial.readStringUntil('#');
-  if (Data_In == "comm")
-  {
-    Serial5.println(Data_In);
-    Serial7.println("MANTIS,");
-    Data_In = "";
-    sfx.println("#13");
-  }
-  else if (Data_In == "dash")
-  {
-    Serial5.println(Data_In);
-    Data_In = "";
-    sfx.println("#08");
-    Serial7.println("Dash,");
-  }
-  else if (Data_In == "config")
-  {
-    Serial5.println(Data_In);
-    Data_In = "";
-    sfx.println("#14");
-    Serial7.println("Config,");
-  }
-  else if (Data_In == "ctrlt")
-  {
-    hudView = 2;
-    sfx.println("#12");
-    Serial6.print("dbs#");
-    Serial6.print("dbt#");
-    Serial6.print("dbv#");
-    Serial7.println("stat," + String(drivePwr) + ',' + String(dbTemp) + "," + String(Dbats[0]) +
-                    "," + String(Dbats[1]) + ',' + String(Dbats[2]) +
-                    "," + String(Dbats[3]) + "," + String(intTemp) + "," + String(batV) + ",");
-    Serial5.println(Data_In);
-    Data_In = "";
-  }
-  else if (Data_In == "exov")
-  {
-    hudView = 1;
-    // Serial.println(" Ctrl Bat Temp = " + String(intTemp));
-    Serial5.println(Data_In);
-    Data_In = "";
-  }
-  else if (Data_In == "modeS")
-  {
-    // Safe Mode from HUD
-    Serial5.println(Data_In);
-    mode = 0;
-    Setpoint = 5;
-    PID1.Compute();
-    moveMotor(Output);
-    Serial7.print("mode = ");
-    Serial7.println(String(mode));
-    Data_In = "";
-  }
-  else if (Data_In == "modes")
-  {
-    // SYNC mode From HUD
-    Serial5.println(Data_In);
-    mode = 1;
-    Serial7.print("mode = ");
-    Serial7.println(String(mode));
-    Data_In = "";
-  }
-  else if (Data_In == "modeh")
-  {
-    // HOLD Mode from HUD
-    Serial5.println(Data_In);
-    isOPen = false;
-    mode = 2;
-    Serial7.print("mode = ");
-    Serial7.println(String(mode) + ',');
-    Data_In = "";
-  }
-}
 void serialEvent7()
 { // From CyberDeck
   Data_In = Serial7.readStringUntil('#');
@@ -425,14 +356,20 @@ void serialEvent7()
     Serial7.println(String(mode));
     Data_In = "";
   }
-  else if (Data_In == "modeq")
+  else if (Data_In == "qen")
   {
-    // Quick Click Mode
+    quick_mode = true;
+    Serial4.println("qcm#");
+    // Quick Click Mode En
     Serial5.println(Data_In);
-    isOPen = false;
-    mode = 4;
-    Serial7.print("mode = ");
-    Serial7.println(String(mode) + ',');
+    Data_In = "";
+  }
+  else if (Data_In == "qdis")
+  {
+    quick_mode = false;
+    Serial4.println("qcmd#");
+    // Quick Click Mode Dis
+    Serial5.println(Data_In);
     Data_In = "";
   }
   else if (Data_In == "modeh")
@@ -599,6 +536,25 @@ void serialEvent4()
     moveMotor(Output);
     Serial5.println(" Config...");
     Serial7.println("config");
+  }
+  else if (Data_In == "c")
+  {
+    if (quick_mode == true)
+    {
+      if (mode_set == true)
+      {
+        mode_set = false;
+        Serial7.println("armed");
+        isOPen = false;
+      }
+      else if (mode_set == false)
+      {
+        mode_set = true;
+        Serial7.println("config");
+        isOPen = false;
+      }
+      Serial5.println(" C");
+    }
   }
   else if (Data_In == "a")
   {
