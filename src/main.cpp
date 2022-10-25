@@ -305,20 +305,17 @@ void serialEvent7()
   {
     Serial5.println(Data_In);
     Data_In = "";
-    sfx.println("#08");
     Serial7.println("Dash,");
   }
   else if (Data_In == "config")
   {
     Serial5.println(Data_In);
     Data_In = "";
-    sfx.println("#14");
     Serial7.println("Config,");
   }
   else if (Data_In == "ctrlt")
   {
     hudView = 2;
-    sfx.println("#12");
     Serial6.print("dbs#");
     Serial6.print("dbt#");
     Serial6.print("dbv#");
@@ -360,6 +357,7 @@ void serialEvent7()
   {
     quick_mode = true;
     Serial4.println("qcm#");
+    sfx.println("#03");
     // Quick Click Mode En
     Serial5.println(Data_In);
     Data_In = "";
@@ -528,7 +526,7 @@ void serialEvent4()
 
   else if (Data_In == "s")
   {
-    sfx.println("#03");
+    sfx.println("#14");
     mode_set = true;
     isOPen = false;
     Setpoint = 0;
