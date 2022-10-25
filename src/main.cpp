@@ -29,15 +29,16 @@ float KP = 3.5; // 4
 float KI = 1.0; // 1
 float KD = 0;   // 0
 
-int I_S_Offset = 3; // 5
+int I_S_Offset = 4;  // 5
+int D_S_OFFSET = 70; // 70
 
 int setpoint = 0;
 
-int PosMIN = 200; // Extended
-int PosMAX = 625; // Retracted
+int PosMIN = 210; // Extended
+int PosMAX = 780; // Retracted
 
-int SetpointMIN = 22;
-int SetpointMAX = 150;
+int SetpointMIN = 15;
+int SetpointMAX = 140;
 
 //############################ VARIABLES ########################################
 String Data_In = "";
@@ -97,14 +98,14 @@ void setup()
   Serial7.setTimeout(50);
 
   delay(3000);
-  Serial5.println("mantis_blade Initializing...");
+  Serial5.println("mantis_arm Initializing...");
   if (!sfx.reset())
   {
     Serial5.println("  Soundboard not found...");
     while (1)
       ;
   }
-  Serial5.println(" SFX board found...");
+  Serial5.println(" Soundboard found...");
   sfx.println("#01");
 
   if (WiiMote == true)
@@ -194,7 +195,7 @@ void loop()
       }
     }
   }
-  if (WiiMote == false)
+  else if (WiiMote == false)
   {
     if (mode > 0)
     {
@@ -205,8 +206,8 @@ void loop()
   int POSsen = map(POSread, PosMIN, PosMAX, 0, 500);
   POSsen = constrain(POSsen, 0, 500);
 
-  // Serial5.print("Possition: ");
-  // Serial5.print(POSsen);
+  // Serial5.print("Position: ");
+  // Serial5.print(POSread);
 
   Input = POSsen;
   setpoint = map(setpoint, SetpointMIN, SetpointMAX, 0, 500);
@@ -220,7 +221,6 @@ void loop()
     isOPen = false;
     // Dynamic mode
     Setpoint = setpoint;
-    delay(20);
     if (Input >= Setpoint - I_S_Offset &&
         Input <= Setpoint + I_S_Offset)
     {
@@ -228,11 +228,15 @@ void loop()
     }
     else
     {
+      // Serial5.print(" Input: ");
+      // Serial5.println(Input);
+      Setpoint = Setpoint + D_S_OFFSET;
       PID1.Compute();
     }
     if (mode_set == false && mode > 0)
     {
       moveMotor(Output);
+      delay(20);
     }
   }
 
@@ -259,14 +263,22 @@ void loop()
     {
       Setpoint = 500;
     }
-    PID1.Compute();
+    if (Input >= Setpoint - I_S_Offset &&
+        Input <= Setpoint + I_S_Offset)
+    {
+      Output = 0.0;
+    }
+    else
+    {
+      PID1.Compute();
+    }
     moveMotor(Output);
     delay(250);
   }
-  if (mode == 3 && mode_set == false)
+  else if (mode == 3 && mode_set == false)
   {
     isOPen = false;
-    // Dynamic mode
+    // Remote mode
     delay(20);
     if (Input >= Setpoint - I_S_Offset &&
         Input <= Setpoint + I_S_Offset)
@@ -286,6 +298,7 @@ void loop()
   {
     isOPen = false;
     Setpoint = 0;
+    setpoint = 0;
     PID1.Compute();
     moveMotor(Output);
   }
@@ -518,6 +531,7 @@ void serialEvent4()
     {
       mode = 0;
     }
+    setpoint = 0;
     Serial5.print(" mode = ");
     Serial5.println(mode);
     Serial7.print("mode = ");
