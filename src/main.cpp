@@ -380,9 +380,22 @@ void serialEvent7()
   else if (Data_In == "qdis")
   {
     quick_mode = false;
+    mode = 0;
     Serial4.println("qcmd#");
     // Quick Click Mode Dis
     Serial5.println(Data_In);
+    Data_In = "";
+  }
+  else if (Data_In == "hopen")
+  {
+    mode = 3;
+    Setpoint = 500;
+    Data_In = "";
+  }
+  else if (Data_In == "hclose")
+  {
+    mode = 3;
+    Setpoint = 0;
     Data_In = "";
   }
   else if (Data_In == "modeh")
