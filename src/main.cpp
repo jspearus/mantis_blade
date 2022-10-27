@@ -384,6 +384,10 @@ void serialEvent7()
     Serial4.println("qcmd#");
     // Quick Click Mode Dis
     Serial5.println(Data_In);
+    Setpoint = Input;
+    PID1.Compute();
+    MotorController.Stop();
+    MotorController.Disable();
     Data_In = "";
   }
   else if (Data_In == "hopen")
