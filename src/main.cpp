@@ -34,7 +34,7 @@ int D_S_OFFSET = 70; // 70
 
 int setpoint = 0;
 
-int PosMIN = 210; // Extended
+int PosMIN = 220; // Extended
 int PosMAX = 780; // Retracted
 
 int SetpointMIN = 15;
@@ -389,7 +389,7 @@ void serialEvent7()
   else if (Data_In == "hopen")
   {
     mode = 3;
-    Setpoint = 500;
+    Setpoint = maxInputRange;
     Data_In = "";
   }
   else if (Data_In == "hclose")
