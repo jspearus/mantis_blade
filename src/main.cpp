@@ -7,7 +7,7 @@
 #include "Adafruit_Soundboard.h"
 #include <EEPROM.h>
 
-//################# PIN DEFINITIONS ########################
+// ################# PIN DEFINITIONS ########################
 const uint8_t M_EN = 4;
 const uint8_t M_L_PWM = 2;
 const uint8_t M_R_PWM = 3;
@@ -19,12 +19,12 @@ const int BAT_Sen = A12;
 // Connect to the RST pin on the Sound Board
 #define SFX_RST 41
 
-//################### FUNCTIONDECLAREATIONS ###############
+// ################### FUNCTIONDECLAREATIONS ###############
 void moveMotor(int val);
 void serialEvent();
 void serial4Event();
 
-//############## PID Values ###############################
+// ############## PID Values ###############################
 float KP = 3.5; // 4
 float KI = 1.0; // 1
 float KD = 0;   // 0
@@ -34,15 +34,15 @@ int D_S_OFFSET = 70; // 70
 
 int setpoint = 0;
 
-int PosMIN = 220; // Extended
-int PosMAX = 780; // Retracted
+int PosMIN = 275; // Extended
+int PosMAX = 770; // Retracted
 
 int SetpointMIN = 15;
 int SetpointMAX = 140;
 
 int maxInputRange = 750;
 
-//############################ VARIABLES ########################################
+// ############################ VARIABLES ########################################
 String Data_In = "";
 int POSsen = 0;
 int intTemp = 0;
@@ -73,7 +73,7 @@ PID PID1(&Input, &Output, &Setpoint, KP, KI, KD, P_ON_E, DIRECT);
 // P_ON_M specifies that Proportional on Measurement be used
 // P_ON_E (Proportional on Error) is the default behavior
 
-//####################FUNCTION DECLARATIONS #############################
+// ####################FUNCTION DECLARATIONS #############################
 void internalTemperature();
 void getDriveBatData();
 
@@ -245,7 +245,7 @@ void loop()
   else if (mode == 2 && mode_set == false)
   {
     // hold mode
-    if (setpoint > 400)
+    if (setpoint > maxInputRange * .8)
     {
       isOPen = !isOPen;
       Serial5.println(isOPen);
