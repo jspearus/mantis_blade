@@ -57,6 +57,7 @@ unsigned long sysClock;
 int updateTime = 5000;
 int hudView = 0;
 
+<<<<<<< Updated upstream
 int mode = 0;
 bool mode_set = false;
 bool quick_mode = false;
@@ -66,6 +67,13 @@ boolean WiiMote = true;
 bool isOPen = false;
 
 // PID Variablesd
+=======
+String Dest = "";
+String Datatype = "";
+String Data = "";
+
+//PID Variables
+>>>>>>> Stashed changes
 double Setpoint, Input, Output;
 
 // Specify the links and initial tuning parameters
@@ -609,6 +617,17 @@ void serialEvent4()
     // Serial5.println(setpoint);
   }
   Data_In = "";
+}
+
+void SerialParser(String Com)
+{
+  Dest = Com.substring(0, Com.indexOf("@"));
+  Datatype = Com.substring(Com.indexOf("@") + 1, Com.indexOf("-"));
+  Data = Com.substring(Com.indexOf("-") + 1, Com.indexOf("#"));
+  //Serial1.println("from Photon");
+  //Serial1.println(Dest);
+  //Serial1.println(Datatype);
+  //Serial1.println(Data);
 }
 
 void moveMotor(int val)
